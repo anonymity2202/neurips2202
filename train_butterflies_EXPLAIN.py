@@ -85,42 +85,7 @@ def main():
     train_loader, val_loader = get_dataset(
         batch_size=args.batch_size, num_workers=args.workers)
 
-    class Logistic(nn.Module):
 
-        def __init__(self, num_classes=5):
-            super(Logistic, self).__init__()
-            self.conv1 = nn.Conv2d(3, 6, 5, 1)
-            self.conv2 = nn.Conv2d(6, 16, 5, 1)
-
-            self.bn1 = nn.BatchNorm2d(6)
-            self.bn2 = nn.BatchNorm2d(16)
-
-            self.maxpool1 = nn.MaxPool2d(2)
-            self.maxpool2 = nn.MaxPool2d(2)
-
-            self.relu = nn.ReLU(inplace=True)
-
-            self.fc1 = nn.Linear(13456, 64)
-            self.fc2 = nn.Linear(64, num_classes)
-
-
-        def forward(self, x):
-            x = self.conv1(x)
-            x = self.bn1(x)
-            x = self.relu(x)
-            x = self.maxpool1(x)
-            x = self.conv2(x)
-            x = self.bn2(x)
-            x = self.relu(x)
-            x = self.maxpool2(x)
-            x = x.view(x.size(0), -1)
-            x = self.fc1(x)
-            embedding = self.relu(x)
-            x = self.fc2(embedding)
-
-            return x, embedding
-
-    # model_main = Logistic(num_classes=5)
 
     model_main = models.__dict__['resnet18_feature'](pretrained=True)
     model_main.fc = nn.Linear(512 * 1, num_classes, bias=False)
@@ -137,6 +102,7 @@ def main():
     teaching_example_index = 0
     all_test_acc_iter = np.zeros(args.iters)
     all_train_acc_iter = np.zeros(args.iters)
+    # this list was gotten from https://github.com/macaodha/explain_teach
     teaching_set_index = [458, 21, 988, 115, 355, 636, 1432, 182, 234, 1017, 191, 750, 380, 992, 1407, 311, 488, 1139, 1379, 978]
     
     imlist = []
