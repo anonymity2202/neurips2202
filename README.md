@@ -55,5 +55,32 @@ train_chineseChars_EXPLAIN.py
 ```
 
 
+## Time and Space
+
+All experiments were run on NVIDIA TITAN Xp 
+
+1. butterflies
+
+model     | #GPUs | train time |
+---------|--------|-----|
+train_butterflies_MMT     | 1 | ~5min    | 
+train_butterflies_STRICT     | 1 | ~5min    | 
+train_butterflies_EXPLAIN     | 1 | ~5min    | 
+
+2. Chinese characters
+
+
+model     | #GPUs | train time |
+---------|--------|-----|
+train_chineseChars_MMT     | 1 | ~3min    | 
+train_chineseChars_STRICT     | 1 | ~3min    | 
+train_chineseChars_EXPLAIN     | 1 | ~3min    | 
+
+## References
+
+[1] Singla, A., Bogunovic, I., Bartók, G., Karbasi, A. and Krause, A., Near-Optimally Teaching the Crowd to Classify, ICML, 2014.
+
+[2] Mac Aodha, O., Su, S., Chen, Y., Perona, P. and Yue, Y., Teaching categories to human learners with visual explanations, CVPR, 2018.
+
 
 
