@@ -30,7 +30,7 @@ datasets
 
 ## Implementation details
 
-### To reproduce our method
+### To reproduce results of our method
 on simulated learners
 ```
 train_butterflies_MMT.py
@@ -42,13 +42,13 @@ train_butterflies_MMT_real.py
 train_chineseChars_MMT_real.py
 ```
 
-### To reproduce STRICT
+### To reproduce results of STRICT
 ```
 train_butterflies_STRICT.py
 train_chineseChars_STRICT.py
 ```
 
-### To reproduce EXPLAIN
+### To reproduce results of EXPLAIN
 ```
 train_butterflies_EXPLAIN.py
 train_chineseChars_EXPLAIN.py
