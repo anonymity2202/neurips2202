@@ -65,7 +65,7 @@ parser.add_argument('--S_max', default=1, type=int, metavar='N',
                     help='see professor writing')
 parser.add_argument('--Lambda', default=10.0, type=int, metavar='N',
                     help='see professor writing')
-parser.add_argument('--selection', default='random', help='see professor writing')
+parser.add_argument('--selection', default='MMT_largemargin', help='see professor writing')
 
 
 def main():
@@ -85,7 +85,42 @@ def main():
     train_loader, val_loader = get_dataset(
         batch_size=args.batch_size, num_workers=args.workers)
 
+    class Logistic(nn.Module):
 
+        def __init__(self, num_classes=5):
+            super(Logistic, self).__init__()
+            self.conv1 = nn.Conv2d(3, 6, 5, 1)
+            self.conv2 = nn.Conv2d(6, 16, 5, 1)
+
+            self.bn1 = nn.BatchNorm2d(6)
+            self.bn2 = nn.BatchNorm2d(16)
+
+            self.maxpool1 = nn.MaxPool2d(2)
+            self.maxpool2 = nn.MaxPool2d(2)
+
+            self.relu = nn.ReLU(inplace=True)
+
+            self.fc1 = nn.Linear(13456, 64)
+            self.fc2 = nn.Linear(64, num_classes)
+
+
+        def forward(self, x):
+            x = self.conv1(x)
+            x = self.bn1(x)
+            x = self.relu(x)
+            x = self.maxpool1(x)
+            x = self.conv2(x)
+            x = self.bn2(x)
+            x = self.relu(x)
+            x = self.maxpool2(x)
+            x = x.view(x.size(0), -1)
+            x = self.fc1(x)
+            embedding = self.relu(x)
+            x = self.fc2(embedding)
+
+            return x, embedding
+
+    # model_main = Logistic(num_classes=5)
 
     model_main = models.__dict__['resnet18_feature'](pretrained=True)
     if args.selection == 'MMT_largemargin':
@@ -213,8 +248,8 @@ def main():
                 num = num + 1
             fl.close()
 
-    np.save('./butterflies/all_train_acc_iter_' + args.selection + '.npy', all_train_acc_iter)
-    np.save('./butterflies/all_test_acc_iter_' + args.selection + '.npy', all_test_acc_iter)
+    np.save('all_train_acc_iter_' + args.selection + '_data_augment_imagenet6.npy', all_train_acc_iter)
+    np.save('all_test_acc_iter_' + args.selection + '_data_augment_imagenet6.npy', all_test_acc_iter)
     # training evalution
     iteration = np.arange(0, args.iters)
     fig, ax = plt.subplots()
@@ -252,9 +287,14 @@ def selection(train_loader, model_main, optimizer_m, epoch, criterion, S_max, La
         embeddings = np.delete(embeddings, target, 0)
         y_c = np.delete(y_c, target, 0)
         codewords = np.delete(codewords, target, 0)
-        weights = np.exp(-0.5 * np.sum(embeddings * (y_c - codewords), axis=1))
-        weight = np.sum(weights)
-        all_weights.append(weight)
+        w_i_original = -np.exp(-0.5 * np.sum(embeddings * (y_c - codewords), axis=1))
+#        w_i_original = np.sum(w_i_original, axis = 1)
+        w_i = np.sum(w_i_original)
+        epsilon = w_i_original / w_i
+        w_i_square = w_i * w_i
+        epsilon = np.reshape(epsilon, (4,1))
+        psi = w_i_square * np.sum((y_c[0,:] - np.sum(codewords * epsilon, axis=0)) * (y_c[0,:] - np.sum(codewords * epsilon, axis=0)))
+        all_weights.append(psi)
 
 
     # select
@@ -273,6 +313,55 @@ def selection(train_loader, model_main, optimizer_m, epoch, criterion, S_max, La
 
 
     return added_example_indices
+    
+    
+#def selection(train_loader, model_main, optimizer_m, epoch, criterion, S_max, Lambda):
+#
+#    # switch to train mode
+#    model_main.train()
+#    all_weights = []
+#    for i, (input, target, index) in enumerate(train_loader):
+#
+#        input = input.cuda()
+#        # target = target.cuda(async=True)
+#
+#
+#        # compute output
+#        _, embeddings = model_main(input)  # embeddings is batch * 64
+#
+#        # gradient is -e^-v
+#        codewords = model_main.module.fc.weight  # codewords is batch * 5 * 64
+#
+#        embeddings = embeddings.detach().cpu().numpy()
+#        codewords = codewords.detach().cpu().numpy()
+#
+#        y_c = codewords[target, :]
+#        y_c = np.tile(y_c, (5, 1))
+#        embeddings = np.tile(embeddings, (5, 1))
+#        embeddings = np.delete(embeddings, target, 0)
+#        y_c = np.delete(y_c, target, 0)
+#        codewords = np.delete(codewords, target, 0)
+#        weights = np.exp(-0.5 * np.sum(embeddings * (y_c - codewords), axis=1))
+#        weight = np.sum(weights)
+#        all_weights.append(weight)
+#
+#
+#    # select
+#    all_weights = np.array(all_weights)
+#    all_weights = torch.from_numpy(all_weights)
+#
+#    sorted_weight, indices_weight = torch.sort(all_weights, descending=True)
+#
+#    cum_weights = torch.cumsum(sorted_weight, dim=0)
+#    cost = Lambda * torch.exp(torch.range(1, S_max))
+#    L = cum_weights[:S_max] - cost
+#    _, S_star = L.max(0)
+#    # print(S_star.item())
+#    added_example_indices = indices_weight[:S_star+1]
+#    added_example_indices = added_example_indices.cpu().numpy()
+#
+#
+#    return added_example_indices
 
 
 def selection_random(train_loader, model_main, optimizer_m, epoch, criterion, S_max, Lambda):
