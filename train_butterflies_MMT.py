@@ -223,12 +223,10 @@ def main():
             train_loader_Lt, val_loader = get_dataset(
                 batch_size=teaching_example_index, num_workers=args.workers, selection=args.selection)
 
-            if args.selection == 'MMT_largemargin' or args.selection == 'random':
-                for epoch in range(10):
-                    prec1_tr = train_largemargin(train_loader_Lt, model_main, optimizer_m, iter, criterion2)
-            else:
-                for epoch in range(1):
-                    prec1_tr = train(train_loader_Lt, model_main, optimizer_m, iter, criterion2)
+
+            for epoch in range(10):
+                prec1_tr = train_largemargin(train_loader_Lt, model_main, optimizer_m, iter, criterion2)
+
 
             print('training acc', prec1_tr.item())
             all_train_acc_iter[iter] = prec1_tr
