@@ -126,7 +126,7 @@ def main():
     if args.selection == 'MMT_largemargin':
         model_main.fc = nn.Linear(512 * 1, num_classes, bias=False)
     else:
-        model_main.fc = nn.Linear(512 * 1, num_classes,bias=False)
+        model_main.fc = nn.Linear(512 * 1, num_classes, bias=False)
     model_main = torch.nn.DataParallel(model_main, device_ids=range(len(args.gpu))).cuda()
 
     criterion = nn.CrossEntropyLoss(reduce=False).cuda()
